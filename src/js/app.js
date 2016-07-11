@@ -382,9 +382,3 @@ window.usng_map = (function() {
         create: create
     }
 })();
-$(document)
-    .ready(function() {
-        usng_map.create({
-            mapID: "map"
-        });
-    });
