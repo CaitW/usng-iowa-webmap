@@ -1,0 +1,44 @@
+#map svg .usng_10k {
+  pointer-events: all; }
+  #map svg .usng_10k:hover {
+    fill: #333333;
+    fill-opacity: 0.5;
+    cursor: pointer; }
+#map svg .city {
+  pointer-events: all; }
+  #map svg .city:hover {
+    fill: #333333;
+    fill-opacity: 0.5;
+    cursor: pointer; }
+#map svg .state {
+  pointer-events: none; }
+#map .leaflet-control-hoverpopup {
+  background-color: #fff;
+  padding: 10px; }
+  #map .leaflet-control-hoverpopup ul {
+    list-style: none;
+    margin: 0;
+    padding: 0; }
+    #map .leaflet-control-hoverpopup ul li {
+      margin: 0;
+      padding: 0; }
+#map .leaflet-control-window {
+  -webkit-transform: none !important;
+          transform: none !important;
+  max-width: none;
+  margin: 10px;
+  width: 90%;
+  width: calc(100% - 20px);
+  height: 90%;
+  height: calc(100% - 20px); }
+  #map .leaflet-control-window .titlebar {
+    padding: 10px 45px 10px 20px; }
+  #map .leaflet-control-window .content {
+    padding: 10px 20px; }
+#map .leaflet-control-dragselect:hover {
+  cursor: pointer; }
+#map .leaflet-control-dragselect a.selected {
+  background-color: #0850cf;
+  color: #fff; }
+#map .leaflet-control-zoom-extent:hover {
+  cursor: pointer; }

@@ -1,0 +1,71 @@
+#map {
+    // layers
+    svg {
+        .usng_10k {
+            pointer-events: all;
+            &:hover {
+                fill: #333333;
+                fill-opacity: 0.5;
+                cursor: pointer;
+            }
+        }
+        .city {
+            pointer-events: all;
+            &:hover {
+                fill: #333333;
+                fill-opacity: 0.5;
+                cursor: pointer;
+            }
+        }
+        .state {
+            pointer-events: none;
+        }
+    }
+    // hover popup
+    .leaflet-control-hoverpopup {
+        background-color: #fff;
+        padding: 10px;
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            li {
+                margin: 0;
+                padding: 0;
+            }
+        }
+    }
+    // click results modal
+    .leaflet-control-window {
+        // undo some of the standard settings 
+        transform: none !important;
+        max-width: none;
+        margin: 10px;
+        // fallback for calc()
+        width: 90%;
+        width: calc(100% - 20px);
+        // fallback for calc()
+        height: 90%;
+        height: calc(100% - 20px);
+        .titlebar {
+            padding: 10px 45px 10px 20px;
+        }
+        .content {
+            padding: 10px 20px;
+        }
+    }
+    .leaflet-control-dragselect {
+        &:hover {
+            cursor: pointer;
+        }
+        a.selected {
+            background-color: #0850cf;
+            color: #fff;
+        }
+    }
+    .leaflet-control-zoom-extent {
+        &:hover {
+            cursor: pointer;
+        }
+    }
+}
