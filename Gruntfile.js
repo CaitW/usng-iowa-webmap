@@ -28,7 +28,9 @@ module.exports = function(grunt) {
             }
         },
         concat_css: {
-            options: {},
+            options: {
+                sourceMapStyle: 'inline'
+            },
             all: {
                 src: ["src/css/lib/*.css", "src/css/*.css"],
                 dest: "dist/usng-web-map.css"
