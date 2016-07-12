@@ -47,6 +47,7 @@
         // fallback for calc()
         height: 90%;
         height: calc(100% - 20px);
+        z-index: 8000;
         .titlebar {
             padding: 10px 45px 10px 20px;
         }
@@ -66,6 +67,17 @@
     .leaflet-control-zoom-extent {
         &:hover {
             cursor: pointer;
+        }
+    }
+    // in-map labels (not popups)
+    .feature-label {
+        display: none;
+        width: auto !important;
+        height: auto !important;
+        pointer-events: none;
+        &.usng_10k {
+            font-weight: bold;
+            font-size: 110%;
         }
     }
 }

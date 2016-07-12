@@ -25,11 +25,15 @@ window.usng_map = (function() {
             onClick: function() {}
         },
         onAdd: function(map) {
+            var self = this;
             // happens after added to map
             var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-dragselect');
             var button = L.DomUtil.create('a', 'button-dragselect', container);
             var icon = L.DomUtil.create('i', 'fa fa-object-group', button);
-            L.DomEvent.addListener(container, 'click', this.options.onClick);
+            L.DomEvent.addListener(container, 'click', function (e) {
+                L.DomEvent.stopPropagation(e);
+                self.options.onClick();
+            });
             return container;
         }
     });
@@ -39,11 +43,15 @@ window.usng_map = (function() {
             onClick: function() {}
         },
         onAdd: function(map) {
+            var self = this;
             // happens after added to map
             var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-zoom-extent');
             var button = L.DomUtil.create('a', 'button-zoom-extent', container);
             var icon = L.DomUtil.create('i', 'fa fa-globe', button);
-            L.DomEvent.addListener(container, 'click', this.options.onClick);
+            L.DomEvent.addListener(container, 'click', function (e) {
+                L.DomEvent.stopPropagation(e);
+                self.options.onClick();
+            });
             return container;
         }
     });
@@ -52,6 +60,7 @@ window.usng_map = (function() {
      */
     var _map, _modal;
     var _dragSelectActive = false;
+    var _debug = false;
     var _zoomExtentButton = new L.Control.ZoomToExtent({
         onClick: _zoomToExtent
     });
@@ -79,7 +88,9 @@ window.usng_map = (function() {
             opacity: 1,
             fill: false,
             clickable: true,
-            className: "city"
+            className: "city",
+            labels: true,
+            labelContentProperty: "GRID1MIL"
         }),
         "state": new L.geoJson(null, {
             stroke: true,
@@ -89,7 +100,8 @@ window.usng_map = (function() {
             fill: false,
             clickable: false,
             className: "state",
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            labels: false
         }),
         "usng_10k": new L.geoJson(null, {
             stroke: true,
@@ -98,7 +110,9 @@ window.usng_map = (function() {
             opacity: 1,
             fill: false,
             clickable: true,
-            className: "usng_10k"
+            className: "usng_10k",
+            labels: true,
+            labelContentProperty: "GRID_10K"
         })
     };
     // Class for determining whether the map layers are fully loaded 
@@ -161,10 +175,15 @@ window.usng_map = (function() {
                 // if the layer is proper GeoJSON, add directly to the layer
                 // otherwise, the layer is probably an ArcGIS export, and therefore we need
                 // to use the Esri Leaflet plugin to read the layer
+                var layerGeoJSON;
                 if (_checkIfGeoJSON(data)) {
-                    _layers[layername].addData(data)
+                    layerGeoJSON = data;
                 } else {
-                    _layers[layername].addData(_createGeoJSONFromArcGIS(data));
+                    layerGeoJSON = _createGeoJSONFromArcGIS(data);
+                }
+                _layers[layername].addData(layerGeoJSON);
+                if (layer.options.labels === true) {
+                    _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, layer.options.labelContentProperty);
                 }
             });
         });
@@ -184,6 +203,13 @@ window.usng_map = (function() {
             maxWidth: 'none'
         });
         _zoomExtentButton.addTo(_map);
+        // create some global variables for debugging, if specified
+        if (typeof options.debug != "undefined" && options.debug === true) {
+            _debug = true;
+            window.app = {};
+            window.app.map = _map;
+            window.app.layers = _layers;
+        }
         // get the layer data from the JSON files
         _getLayerData(function() {
             // when everything is loaded, rearrange files
@@ -195,19 +221,23 @@ window.usng_map = (function() {
         });
         // fit the map extent to the specified boundaries
         _zoomToExtent();
+        // initialize all the modules
         _hover.init();
         _click.init();
         _dragSelect.init();
+        _labels.init();
     };
 
     function _showResults(cities, grids) {
         if (cities.length > 0 || grids.length > 0) {
             var $text = $("<ul></ul>");
             $.each(cities, function(i, text) {
-                $("<li><a href='" + _config.mapLocation + text + ".pdf'>" + text + "</a></li>").appendTo($text);
+                $("<li><a href='" + _config.mapLocation + text + ".pdf'>" + text + "</a></li>")
+                    .appendTo($text);
             });
             $.each(grids, function(i, text) {
-                $("<li><a href='" + _config.mapLocation + text + ".pdf'>" + text + "</a></li>").appendTo($text);
+                $("<li><a href='" + _config.mapLocation + text + ".pdf'>" + text + "</a></li>")
+                    .appendTo($text);
             });
             _modal.title("Selected")
                 .content($text.html())
@@ -294,7 +324,7 @@ window.usng_map = (function() {
         };
 
         function init() {
-            _map.on("mousedown", function(e) {
+            _map.on("click", function(e) {
                 if (!_dragSelectActive) {
                     _click(e);
                 }
@@ -375,6 +405,64 @@ window.usng_map = (function() {
             });
         }
         return {
+            init: init
+        }
+    })();
+    /** 
+     * Label Module
+     */
+    var _labels = (function() {
+        var _layerLabels = {};
+
+        function createLabelsFromGeoJSON(layername, geoJSON, propertyToDisplay) {
+            var labelCollection = [];
+            $.each(geoJSON.features, function(i, feature) {
+                var centroid = turf.centroid(feature);
+                var icon = L.divIcon({
+                    className: 'feature-label ' + layername,
+                    html: feature.properties[propertyToDisplay]
+                });
+                var location = L.latLng(centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]);
+                var label = L.marker(location, { icon: icon })
+                    .addTo(_map);
+                // center icon HTML and attach properties to data object
+                var iconMargin = ($(label._icon)
+                    .width() / 2) * -1;
+                $(label._icon)
+                    .data(feature.properties)
+                    .css("margin-left", iconMargin);
+                // add label to list
+                labelCollection.push(label);
+            });
+            _layerLabels[layername] = labelCollection;
+        };
+
+        function _showLabels() {
+            $('.feature-label')
+                .show();
+        };
+
+        function _hideLabels() {
+            $('.feature-label')
+                .hide();
+        };
+
+        function _zoomChange() {
+            if (_map.getZoom() > 10) {
+                _showLabels();
+            } else {
+                _hideLabels();
+            }
+        };
+
+        function init() {
+            _map.on('zoomend', _zoomChange);
+            if (_debug === true) {
+                window.app.layerLabels = _layerLabels;
+            }
+        };
+        return {
+            createLabelsFromGeoJSON: createLabelsFromGeoJSON,
             init: init
         }
     })();

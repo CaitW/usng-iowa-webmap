@@ -30,7 +30,8 @@
   width: 90%;
   width: calc(100% - 20px);
   height: 90%;
-  height: calc(100% - 20px); }
+  height: calc(100% - 20px);
+  z-index: 8000; }
   #map .leaflet-control-window .titlebar {
     padding: 10px 45px 10px 20px; }
   #map .leaflet-control-window .content {
@@ -42,3 +43,11 @@
   color: #fff; }
 #map .leaflet-control-zoom-extent:hover {
   cursor: pointer; }
+#map .feature-label {
+  display: none;
+  width: auto !important;
+  height: auto !important;
+  pointer-events: none; }
+  #map .feature-label.usng_10k {
+    font-weight: bold;
+    font-size: 110%; }
