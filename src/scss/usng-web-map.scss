@@ -80,4 +80,8 @@
             font-size: 110%;
         }
     }
+    // don't display area reading when selecting polygons
+    .leaflet-draw-tooltip-subtext {
+        display: none !important;
+    }
 }

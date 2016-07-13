@@ -51,3 +51,5 @@
   #map .feature-label.usng_10k {
     font-weight: bold;
     font-size: 110%; }
+#map .leaflet-draw-tooltip-subtext {
+  display: none !important; }

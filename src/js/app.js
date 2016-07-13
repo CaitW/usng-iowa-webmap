@@ -30,7 +30,7 @@ window.usng_map = (function() {
             var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-dragselect');
             var button = L.DomUtil.create('a', 'button-dragselect', container);
             var icon = L.DomUtil.create('i', 'fa fa-object-group', button);
-            L.DomEvent.addListener(container, 'click', function (e) {
+            L.DomEvent.addListener(container, 'click', function(e) {
                 L.DomEvent.stopPropagation(e);
                 self.options.onClick();
             });
@@ -48,7 +48,7 @@ window.usng_map = (function() {
             var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-zoom-extent');
             var button = L.DomUtil.create('a', 'button-zoom-extent', container);
             var icon = L.DomUtil.create('i', 'fa fa-globe', button);
-            L.DomEvent.addListener(container, 'click', function (e) {
+            L.DomEvent.addListener(container, 'click', function(e) {
                 L.DomEvent.stopPropagation(e);
                 self.options.onClick();
             });
@@ -64,23 +64,10 @@ window.usng_map = (function() {
     var _zoomExtentButton = new L.Control.ZoomToExtent({
         onClick: _zoomToExtent
     });
-    var _config = {
-        data: {
-            "usng_10k": "../data/10k.json",
-            "city": "../data/city.json",
-            "state": "../data/iowa.json"
-        },
-        mapLocation: "maps/",
-        mapExtent: [
-            [40.379535, -96.631756],
-            [43.501391, -90.141582]
-        ]
-    };
-    var _basemap = new L.TileLayer("http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    });
+    var _config;
+    var _basemap;
     var _layers = {
-        "city": new L.geoJson(null, {
+        "usng_1k": new L.geoJson(null, {
             stroke: true,
             color: "#333333",
             weight: 2,
@@ -88,9 +75,7 @@ window.usng_map = (function() {
             opacity: 1,
             fill: false,
             clickable: true,
-            className: "city",
-            labels: true,
-            labelContentProperty: "GRID1MIL"
+            className: "usng_1k"
         }),
         "state": new L.geoJson(null, {
             stroke: true,
@@ -100,8 +85,7 @@ window.usng_map = (function() {
             fill: false,
             clickable: false,
             className: "state",
-            pointerEvents: 'none',
-            labels: false
+            pointerEvents: 'none'
         }),
         "usng_10k": new L.geoJson(null, {
             stroke: true,
@@ -110,9 +94,7 @@ window.usng_map = (function() {
             opacity: 1,
             fill: false,
             clickable: true,
-            className: "usng_10k",
-            labels: true,
-            labelContentProperty: "GRID_10K"
+            className: "usng_10k"
         })
     };
     // Class for determining whether the map layers are fully loaded 
@@ -170,7 +152,8 @@ window.usng_map = (function() {
         // cycle through the _config-specified layers and get them set up
         $.each(_layers, function(layername, layer) {
             isLoaded.newLayer(layername);
-            $.getJSON(_config.data[layername], function(data) {
+            var url = _config.layers[layername].dataLocation;
+            $.getJSON(url, function(data) {
                 isLoaded.loaded(layername);
                 // if the layer is proper GeoJSON, add directly to the layer
                 // otherwise, the layer is probably an ArcGIS export, and therefore we need
@@ -182,8 +165,8 @@ window.usng_map = (function() {
                     layerGeoJSON = _createGeoJSONFromArcGIS(data);
                 }
                 _layers[layername].addData(layerGeoJSON);
-                if (layer.options.labels === true) {
-                    _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, layer.options.labelContentProperty);
+                if (_config.layers[layername].labels === true) {
+                    _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, _config.layers[layername].labelProperty);
                 }
             });
         });
@@ -191,52 +174,62 @@ window.usng_map = (function() {
 
     function _zoomToExtent() {
         // fit the map extent to the specified boundaries
-        _map.fitBounds(_config.mapExtent);
+        _map.fitBounds(_config.map_extent);
     };
 
     function create(options) {
-        // initialize a map with the empty layers
-        _map = L.map(options.mapID, {
-            layers: [_basemap, _layers.state, _layers.usng_10k, _layers.city]
-        });
-        _modal = L.control.window(_map, {
-            maxWidth: 'none'
-        });
-        _zoomExtentButton.addTo(_map);
-        // create some global variables for debugging, if specified
-        if (typeof options.debug != "undefined" && options.debug === true) {
-            _debug = true;
-            window.app = {};
-            window.app.map = _map;
-            window.app.layers = _layers;
+        if (typeof options.mapID === "undefined") {
+            // the user didn't specify a map ID (usually a div) 
+            throw "USNG Map: Creating the map requires an HTML ID. This ID should point to a container that will hold the map.";
         }
-        // get the layer data from the JSON files
-        _getLayerData(function() {
-            // when everything is loaded, rearrange files
-            _layers.usng_10k.bringToBack();
-            // make sure the state layer is in the back
-            _layers.state.bringToBack();
-            // and the city layer sits on top of the USNG 10k maps
-            _layers.city.bringToFront();
+        $.getJSON("config.json", function(data) {
+            _config = data;
+            _basemap = new L.TileLayer(_config.layers.basemap.url, {
+                attribution: _config.layers.basemap.attribution
+            });
+            // initialize a map with the empty layers
+            _map = L.map(options.mapID, {
+                layers: [_basemap, _layers.state, _layers.usng_10k, _layers.usng_1k]
+            });
+            _modal = L.control.window(_map, {
+                maxWidth: 'none'
+            });
+            _zoomExtentButton.addTo(_map);
+            // create some global variables for debugging, if specified
+            if (typeof options.debug != "undefined" && options.debug === true) {
+                _debug = true;
+                window.app = {};
+                window.app.map = _map;
+                window.app.layers = _layers;
+            }
+            // get the layer data from the JSON files
+            _getLayerData(function() {
+                // when everything is loaded, rearrange files
+                _layers.usng_10k.bringToBack();
+                // make sure the state layer is in the back
+                _layers.state.bringToBack();
+                // and the usng_1k layer sits on top of the USNG 10k maps
+                _layers.usng_1k.bringToFront();
+            });
+            // fit the map extent to the specified boundaries
+            _zoomToExtent();
+            // initialize all the modules
+            _hover.init();
+            _click.init();
+            _dragSelect.init();
+            _labels.init();
         });
-        // fit the map extent to the specified boundaries
-        _zoomToExtent();
-        // initialize all the modules
-        _hover.init();
-        _click.init();
-        _dragSelect.init();
-        _labels.init();
     };
 
-    function _showResults(cities, grids) {
-        if (cities.length > 0 || grids.length > 0) {
+    function _showResults(usng_1k, usng_10k) {
+        if (usng_1k.length > 0 || usng_10k.length > 0) {
             var $text = $("<ul></ul>");
-            $.each(cities, function(i, text) {
-                $("<li><a href='" + _config.mapLocation + text + ".pdf'>" + text + "</a></li>")
+            $.each(usng_1k, function(i, text) {
+                $("<li><a href='" + _config.layers["usng_1k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>")
                     .appendTo($text);
             });
-            $.each(grids, function(i, text) {
-                $("<li><a href='" + _config.mapLocation + text + ".pdf'>" + text + "</a></li>")
+            $.each(usng_10k, function(i, text) {
+                $("<li><a href='" + _config.layers["usng_10k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>")
                     .appendTo($text);
             });
             _modal.title("Selected")
@@ -251,15 +244,15 @@ window.usng_map = (function() {
      */
     var _hover = (function() {
         var _hovered = {
-            cities: [],
+            usng_1k: [],
             usng_10k: []
         };
         var _popup = new L.Control.HoverPopup();
 
         function _updateText() {
-            if (_hovered.cities.length > 0 || _hovered.usng_10k.length > 0) {
+            if (_hovered.usng_1k.length > 0 || _hovered.usng_10k.length > 0) {
                 var $hoverText = $("<ul></ul>");
-                $.each(_hovered.cities, function(i, text) {
+                $.each(_hovered.usng_1k, function(i, text) {
                     $hoverText.append("<li>" + text + "</li>");
                 });
                 $.each(_hovered.usng_10k, function(i, text) {
@@ -281,13 +274,15 @@ window.usng_map = (function() {
             $.each(_hovered, function(key, selected) {
                 _hovered[key] = [];
             });
-            var grids = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_10k);
-            var cities = leafletPip.pointInLayer(mouseEvent.latlng, _layers.city);
-            $.each(grids, function(i, layer) {
-                _hovered.usng_10k.push(layer.feature.properties.GRID_10K);
+            var usng_10k = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_10k);
+                var labels_10k = _config.layers["usng_10k"].labelPropertyName;
+            var usng_1k = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_1k);
+                var labels_1k = _config.layers["usng_1k"].labelPropertyName;
+            $.each(usng_10k, function(i, layer) {
+                _hovered.usng_10k.push(layer.feature.properties[labels_10k]);
             });
-            $.each(cities, function(i, layer) {
-                _hovered.cities.push(layer.feature.properties.GRID1MIL);
+            $.each(usng_1k, function(i, layer) {
+                _hovered.usng_1k.push(layer.feature.properties[labels_1k]);
             });
             _updateText();
         };
@@ -304,7 +299,7 @@ window.usng_map = (function() {
     })();
     var _click = (function() {
         var _clicked = {
-            cities: [],
+            usng_1k: [],
             usng_10k: []
         };
 
@@ -312,15 +307,17 @@ window.usng_map = (function() {
             $.each(_clicked, function(key, selected) {
                 _clicked[key] = [];
             });
-            var grids = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_10k);
-            var cities = leafletPip.pointInLayer(mouseEvent.latlng, _layers.city);
-            $.each(grids, function(i, layer) {
-                _clicked.usng_10k.push(layer.feature.properties.GRID_10K);
+            var usng_10k = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_10k);
+            var labels_10k = _config.layers["usng_10k"].labelPropertyName;
+            var usng_1k = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_1k);
+            var labels_1k = _config.layers["usng_1k"].labelPropertyName;
+            $.each(usng_10k, function(i, layer) {
+                _clicked.usng_10k.push(layer.feature.properties[labels_10k]);
             });
-            $.each(cities, function(i, layer) {
-                _clicked.cities.push(layer.feature.properties.GRID1MIL);
+            $.each(usng_1k, function(i, layer) {
+                _clicked.usng_1k.push(layer.feature.properties[labels_1k]);
             });
-            _showResults(_clicked.cities, _clicked.usng_10k);
+            _showResults(_clicked.usng_1k, _clicked.usng_10k);
         };
 
         function init() {
@@ -339,7 +336,7 @@ window.usng_map = (function() {
             onClick: _toggle
         });
         var _selected = {
-            cities: [],
+            usng_1k: [],
             usng_10k: []
         };
         var _handler;
@@ -362,14 +359,14 @@ window.usng_map = (function() {
         function _getResults(e) {
             if (e) {
                 var drawnFeature = e.layer.toGeoJSON();
-                var city = _layers.city.toGeoJSON();
+                var usng_1k = _layers.usng_1k.toGeoJSON();
                 var usng_10k = _layers.usng_10k.toGeoJSON();
-                _selected.cities = [];
+                _selected.usng_1k = [];
                 _selected.usng_10k = [];
-                $.each(city.features, function(i, feature) {
+                $.each(usng_1k.features, function(i, feature) {
                     var intersection = (typeof turf.intersect(feature, drawnFeature) !== "undefined") ? true : false;
                     if (intersection) {
-                        _selected.cities.push(feature.properties.GRID1MIL);
+                        _selected.usng_1k.push(feature.properties.GRID1MIL);
                     }
                 });
                 $.each(usng_10k.features, function(i, feature) {
@@ -378,8 +375,8 @@ window.usng_map = (function() {
                         _selected.usng_10k.push(feature.properties.GRID_10K);
                     }
                 });
-                if (_selected.cities.length > 0 || _selected.usng_10k.length > 0) {
-                    _showResults(_selected.cities, _selected.usng_10k);
+                if (_selected.usng_1k.length > 0 || _selected.usng_10k.length > 0) {
+                    _showResults(_selected.usng_1k, _selected.usng_10k);
                 } else {
                     _modal.hide();
                 }
@@ -387,9 +384,6 @@ window.usng_map = (function() {
         };
 
         function init() {
-            if (typeof L === "undefined" || typeof $ === "undefined" || typeof turf === "undefined" || typeof L.Draw === "undefined" || typeof leafletPip === "undefined" || typeof L.Control.Window === "undefined" || typeof L.esri === "undefined") {
-                throw "USNG Map: Check to make sure all libraries are loaded.";
-            }
             // update default Leaflet.Draw tooltips
             L.drawLocal.draw.handlers.rectangle.tooltip.start = "Click and drag to select features";
             L.drawLocal.draw.handlers.simpleshape.tooltip.end = "Release mouse when done selecting";

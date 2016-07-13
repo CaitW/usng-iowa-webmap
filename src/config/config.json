@@ -1,0 +1,28 @@
+{
+    "map_extent": [
+        [40.379535, -96.631756],
+        [43.501391, -90.141582]
+    ],
+    "layers": {
+        "usng_10k": {
+        	"dataLocation": "data/usng_10k.json",
+        	"mapbookLocations": "https://ia.sharedgeo.net/maps/USNG_10K/",
+        	"showLabels": true,
+        	"labelPropertyName": "GRID_10K"
+        },
+        "usng_1k": {
+        	"dataLocation": "data/usng_1k.json",
+        	"mapbookLocations": "https://ia.sharedgeo.net/maps/USNG_mapbooks/",
+        	"showLabels": true,
+        	"labelPropertyName": "GRID1MIL"
+        },
+        "state": {
+        	"showLabels": false,
+        	"dataLocation": "data/state.json"
+        },
+        "basemap": {
+        	"url": "http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png",
+        	"attribution": "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>"
+        }  	
+    }
+}
