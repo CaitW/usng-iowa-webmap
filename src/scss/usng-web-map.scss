@@ -1,87 +1,161 @@
-#map {
-    // layers
-    svg {
-        .usng_10k {
-            pointer-events: all;
-            &:hover {
-                fill: #333333;
-                fill-opacity: 0.5;
-                cursor: pointer;
+.usng_web_map {
+    font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+    #inner_map_container {
+        // layers
+        svg {
+            .usng_10k {
+                pointer-events: all;
+                &:hover {
+                    fill: #333333;
+                    fill-opacity: 0.5;
+                    cursor: pointer;
+                }
+            }
+            .city {
+                pointer-events: all;
+                &:hover {
+                    fill: #333333;
+                    fill-opacity: 0.5;
+                    cursor: pointer;
+                }
+            }
+            .state {
+                pointer-events: none;
             }
         }
-        .city {
-            pointer-events: all;
-            &:hover {
-                fill: #333333;
-                fill-opacity: 0.5;
-                cursor: pointer;
-            }
-        }
-        .state {
-            pointer-events: none;
-        }
-    }
-    // hover popup
-    .leaflet-control-hoverpopup {
-        background-color: #fff;
-        padding: 10px;
-        ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            li {
+        // hover popup
+        .leaflet-control-hoverpopup {
+            background-color: #fff;
+            padding: 10px;
+            ul {
+                list-style: none;
                 margin: 0;
                 padding: 0;
+                li {
+                    margin: 0;
+                    padding: 0;
+                }
+            }
+        }
+        // click results modal
+        .leaflet-control-window {
+            // undo some of the standard settings 
+            transform: none !important;
+            max-width: none;
+            margin: 10px;
+            // fallback for calc()
+            width: 90%;
+            width: calc(100% - 20px);
+            // fallback for calc()
+            height: 90%;
+            height: calc(100% - 20px);
+            z-index: 8000;
+            .titlebar {
+                padding: 10px 45px 10px 20px;
+            }
+            .content {
+                padding: 10px 20px;
+            }
+        }
+        .leaflet-control-dragselect {
+            &:hover {
+                cursor: pointer;
+            }
+            a.selected {
+                background-color: #0850cf;
+                color: #fff;
+            }
+        }
+        .leaflet-control-zoom-extent {
+            &:hover {
+                cursor: pointer;
+            }
+        }
+        // in-map labels (not popups)
+        .feature-label {
+            display: none;
+            width: auto !important;
+            height: auto !important;
+            pointer-events: none;
+            &.usng_10k {
+                font-weight: bold;
+                font-size: 110%;
+            }
+        }
+        // don't display area reading when selecting polygons
+        .leaflet-draw-tooltip-subtext {
+            display: none !important;
+        }
+    }
+    #results_container {
+        overflow: scroll;
+        .close_results {
+            background-color: #333;
+            font-weight: bold;
+            font-size: 24px;
+            color: #eee;
+            i {
+                margin-right: 10px;
+                padding: 5px;
+                font-size: 30px;
+                &:hover {
+                    color: #fff;
+                    cursor: pointer;
+                }
             }
         }
     }
-    // click results modal
-    .leaflet-control-window {
-        // undo some of the standard settings 
-        transform: none !important;
-        max-width: none;
-        margin: 10px;
-        // fallback for calc()
-        width: 90%;
-        width: calc(100% - 20px);
-        // fallback for calc()
-        height: 90%;
-        height: calc(100% - 20px);
-        z-index: 8000;
-        .titlebar {
-            padding: 10px 45px 10px 20px;
+    /* Different App States (showing results vs hiding results, screen sizes) */
+    &.hide_results {
+        #inner_map_container {
+            width: 100%;
+            height: 100%;
         }
-        .content {
-            padding: 10px 20px;
+        #results_container {
+            display: none;
         }
     }
-    .leaflet-control-dragselect {
-        &:hover {
-            cursor: pointer;
+    &.show_results.small_screen {
+        #inner_map_container {
+            display: none;
         }
-        a.selected {
-            background-color: #0850cf;
-            color: #fff;
-        }
-    }
-    .leaflet-control-zoom-extent {
-        &:hover {
-            cursor: pointer;
+        #results_container {
+            width: 100%;
+            height: 100%;
         }
     }
-    // in-map labels (not popups)
-    .feature-label {
-        display: none;
-        width: auto !important;
-        height: auto !important;
-        pointer-events: none;
-        &.usng_10k {
-            font-weight: bold;
-            font-size: 110%;
+    &.show_results.large_screen.horizontal_aspect {
+        #inner_map_container {
+            display: inline-block;
+            width: 70%;
+            height: 100%;
+        }
+        #results_container {
+            border: 0 solid #333;
+            border-left-width: 5px;
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            left: 70%;
+            height: 100%;
         }
     }
-    // don't display area reading when selecting polygons
-    .leaflet-draw-tooltip-subtext {
-        display: none !important;
+    &.show_results.large_screen.vertical_aspect {
+        #inner_map_container {
+            display: block;
+            width: 100%;
+            height: 70%;
+        }
+        #results_container {
+            border: 0 solid #333;
+            border-top-width: 5px;
+            position: absolute;
+            right: 0;
+            top: 70%;
+            bottom: 0;
+            left: 0;
+            height: 30%;
+        }
     }
 }

@@ -11,12 +11,10 @@ window.usng_map = (function() {
             return container;
         },
         show: function() {
-            $(".leaflet-control-hoverpopup")
-                .show();
+            $(".leaflet-control-hoverpopup").show();
         },
         hide: function() {
-            $(".leaflet-control-hoverpopup")
-                .hide();
+            $(".leaflet-control-hoverpopup").hide();
         }
     });
     L.Control.DragSelect = L.Control.extend({
@@ -58,7 +56,10 @@ window.usng_map = (function() {
     /**
      * Map Setup
      */
-    var _map, _modal;
+    var $appContainer;
+    var $map = $("<div id='inner_map_container'></div>");
+    var $results = $("<div id='results_container'><div class='close_results'><i class='fa fa-times-circle'></i> Results</div><div class='results_list'></div></div>");
+    var _map;
     var _dragSelectActive = false;
     var _debug = false;
     var _zoomExtentButton = new L.Control.ZoomToExtent({
@@ -126,7 +127,8 @@ window.usng_map = (function() {
     function _checkIfGeoJSON(obj) {
         if (typeof obj.type != "undefined" && (obj.type == "Point" || obj.type == "MultiPoint" || obj.type == "LineString" || obj.type == "MultiLineString" || obj.type == "Polygon" || obj.type == "MultiPolygon" || obj.type == "GeometryCollection" || obj.type == "FeatureCollection")) {
             return true;
-        } else {
+        }
+        else {
             return false;
         }
     };
@@ -141,7 +143,8 @@ window.usng_map = (function() {
                 featureCollection.features.push(L.esri.Util.arcgisToGeoJSON(feature));
             });
             return featureCollection;
-        } else {
+        }
+        else {
             throw ": input file not in lat/lon coordinates";
         }
     };
@@ -161,12 +164,16 @@ window.usng_map = (function() {
                 var layerGeoJSON;
                 if (_checkIfGeoJSON(data)) {
                     layerGeoJSON = data;
-                } else {
+                }
+                else {
                     layerGeoJSON = _createGeoJSONFromArcGIS(data);
                 }
                 _layers[layername].addData(layerGeoJSON);
-                if (_config.layers[layername].labels === true) {
-                    _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, _config.layers[layername].labelProperty);
+                if(typeof _config.layers[layername].color !== "undefined") {
+                    _layers[layername].setStyle({color: _config.layers[layername].color});
+                };
+                if (typeof _config.layers[layername].showLabels !== "undefined" && _config.layers[layername].showLabels === true) {
+                    _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, _config.layers[layername].labelPropertyName);
                 }
             });
         });
@@ -177,22 +184,40 @@ window.usng_map = (function() {
         _map.fitBounds(_config.map_extent);
     };
 
+    function _updateSizeClasses() {
+        if ($appContainer.width() < 500) {
+            $appContainer.addClass("small_screen");
+            $appContainer.removeClass("large_screen");
+        }
+        else {
+            $appContainer.addClass("large_screen");
+            $appContainer.removeClass("small_screen");
+            if($appContainer.width() / $appContainer.height() < 1) {
+                $appContainer.removeClass("horizontal_aspect");
+                $appContainer.addClass("vertical_aspect");
+            } else {
+                $appContainer.removeClass("vertical_aspect");
+                $appContainer.addClass("horizontal_aspect");
+            }
+        }
+
+    };
+
     function create(options) {
         if (typeof options.mapID === "undefined") {
             // the user didn't specify a map ID (usually a div) 
             throw "USNG Map: Creating the map requires an HTML ID. This ID should point to a container that will hold the map.";
         }
         $.getJSON("config.json", function(data) {
+            $appContainer = $("#" + options.mapID).addClass("usng_web_map").addClass("hide_results");
+            _updateSizeClasses();
+            $map.appendTo($appContainer);
+            $results.appendTo($appContainer);
             _config = data;
-            _basemap = new L.TileLayer(_config.layers.basemap.url, {
-                attribution: _config.layers.basemap.attribution
-            });
+            _basemap = L.esri.basemapLayer(_config.layers.basemap);
             // initialize a map with the empty layers
-            _map = L.map(options.mapID, {
+            _map = L.map("inner_map_container", {
                 layers: [_basemap, _layers.state, _layers.usng_10k, _layers.usng_1k]
-            });
-            _modal = L.control.window(_map, {
-                maxWidth: 'none'
             });
             _zoomExtentButton.addTo(_map);
             // create some global variables for debugging, if specified
@@ -218,27 +243,55 @@ window.usng_map = (function() {
             _click.init();
             _dragSelect.init();
             _labels.init();
+            results.init();
+            $(window).resize(_updateSizeClasses);
         });
     };
 
-    function _showResults(usng_1k, usng_10k) {
-        if (usng_1k.length > 0 || usng_10k.length > 0) {
-            var $text = $("<ul></ul>");
-            $.each(usng_1k, function(i, text) {
-                $("<li><a href='" + _config.layers["usng_1k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>")
-                    .appendTo($text);
-            });
-            $.each(usng_10k, function(i, text) {
-                $("<li><a href='" + _config.layers["usng_10k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>")
-                    .appendTo($text);
-            });
-            _modal.title("Selected")
-                .content($text.html())
-                .show();
-        } else {
-            _modal.hide();
+    var results = (function() {
+        function _getDOM(usng_1k, usng_10k) {
+            if (usng_1k.length > 0 || usng_10k.length > 0) {
+                var $text = $("<ul></ul>");
+                $.each(usng_1k, function(i, text) {
+                    $("<li><a href='" + _config.layers["usng_1k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>").appendTo($text);
+                });
+                $.each(usng_10k, function(i, text) {
+                    $("<li><a href='" + _config.layers["usng_10k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>").appendTo($text);
+                });
+                return $text;
+            }
+            else {
+                return false;
+            }
+        };
+
+        function show(usng_1k, usng_10k) {
+            var $dom = _getDOM(usng_1k, usng_10k);
+            if ($dom) {
+                $results.find(".results_list")
+                    .empty()
+                    .append($dom);
+                $appContainer.removeClass("hide_results");
+                $appContainer.addClass("show_results");
+                _map.invalidateSize();
+            }
+        };
+
+        function hide() {
+            $appContainer.removeClass("show_results");
+            $appContainer.addClass("hide_results");
+            _map.invalidateSize();
+        };
+
+        function init () {
+            $(document).on("click", ".close_results i", hide);
+        };
+        return {
+            show: show,
+            hide: hide,
+            init: init
         }
-    }
+    })();
     /**
      * Selection Method Modules
      */
@@ -258,14 +311,12 @@ window.usng_map = (function() {
                 $.each(_hovered.usng_10k, function(i, text) {
                     $hoverText.append("<li>" + text + "</li>");
                 });
-                $(".leaflet-control-hoverpopup")
-                    .empty();
-                $(".leaflet-control-hoverpopup")
-                    .append($hoverText);
+                $(".leaflet-control-hoverpopup").empty();
+                $(".leaflet-control-hoverpopup").append($hoverText);
                 _popup.show();
-            } else {
-                $(".leaflet-control-hoverpopup")
-                    .empty();
+            }
+            else {
+                $(".leaflet-control-hoverpopup").empty();
                 _popup.hide();
             }
         };
@@ -275,9 +326,9 @@ window.usng_map = (function() {
                 _hovered[key] = [];
             });
             var usng_10k = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_10k);
-                var labels_10k = _config.layers["usng_10k"].labelPropertyName;
+            var labels_10k = _config.layers["usng_10k"].labelPropertyName;
             var usng_1k = leafletPip.pointInLayer(mouseEvent.latlng, _layers.usng_1k);
-                var labels_1k = _config.layers["usng_1k"].labelPropertyName;
+            var labels_1k = _config.layers["usng_1k"].labelPropertyName;
             $.each(usng_10k, function(i, layer) {
                 _hovered.usng_10k.push(layer.feature.properties[labels_10k]);
             });
@@ -317,7 +368,7 @@ window.usng_map = (function() {
             $.each(usng_1k, function(i, layer) {
                 _clicked.usng_1k.push(layer.feature.properties[labels_1k]);
             });
-            _showResults(_clicked.usng_1k, _clicked.usng_10k);
+            results.show(_clicked.usng_1k, _clicked.usng_10k);
         };
 
         function init() {
@@ -343,14 +394,13 @@ window.usng_map = (function() {
 
         function _toggle() {
             if (!_dragSelectActive) {
-                $(".button-dragselect")
-                    .addClass("selected");
+                $(".button-dragselect").addClass("selected");
                 // enable drawing
                 _dragSelectActive = true;
                 _handler.enable();
-            } else {
-                $(".button-dragselect")
-                    .removeClass("selected");
+            }
+            else {
+                $(".button-dragselect").removeClass("selected");
                 _dragSelectActive = false;
                 _handler.disable();
             }
@@ -376,9 +426,10 @@ window.usng_map = (function() {
                     }
                 });
                 if (_selected.usng_1k.length > 0 || _selected.usng_10k.length > 0) {
-                    _showResults(_selected.usng_1k, _selected.usng_10k);
-                } else {
-                    _modal.hide();
+                    results.show(_selected.usng_1k, _selected.usng_10k);
+                }
+                else {
+                    results.hide();
                 }
             }
         };
@@ -417,14 +468,12 @@ window.usng_map = (function() {
                     html: feature.properties[propertyToDisplay]
                 });
                 var location = L.latLng(centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]);
-                var label = L.marker(location, { icon: icon })
-                    .addTo(_map);
+                var label = L.marker(location, {
+                    icon: icon
+                }).addTo(_map);
                 // center icon HTML and attach properties to data object
-                var iconMargin = ($(label._icon)
-                    .width() / 2) * -1;
-                $(label._icon)
-                    .data(feature.properties)
-                    .css("margin-left", iconMargin);
+                var iconMargin = ($(label._icon).width() / 2) * -1;
+                $(label._icon).data(feature.properties).css("margin-left", iconMargin);
                 // add label to list
                 labelCollection.push(label);
             });
@@ -432,19 +481,18 @@ window.usng_map = (function() {
         };
 
         function _showLabels() {
-            $('.feature-label')
-                .show();
+            $('.feature-label').show();
         };
 
         function _hideLabels() {
-            $('.feature-label')
-                .hide();
+            $('.feature-label').hide();
         };
 
         function _zoomChange() {
             if (_map.getZoom() > 10) {
                 _showLabels();
-            } else {
+            }
+            else {
                 _hideLabels();
             }
         };

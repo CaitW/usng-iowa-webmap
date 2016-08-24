@@ -9,7 +9,7 @@ module.exports = function(grunt) {
                 stripBanners: true,
             },
             dist: {
-                src: ['src/js/lib/jquery-1.11.3.min.js', 'src/js/lib/leaflet.js', 'src/js/lib/esri-leaflet.js', 'src/js/lib/leaflet-pip.min.js', 'src/js/lib/L.Control.Window.js', 'src/js/lib/leaflet.draw.js', 'src/js/lib/turf.min.js', 'src/js/lib/leaflet.label.js', 'src/js/app.js'],
+                src: ['src/js/lib/jquery-1.11.3.min.js', 'src/js/lib/leaflet.js', 'src/js/lib/esri-leaflet.js', 'src/js/lib/leaflet-pip.min.js', 'src/js/lib/leaflet.draw.js', 'src/js/lib/turf.min.js', 'src/js/lib/leaflet.label.js', 'src/js/app.js'],
                 dest: 'dist/usng-web-map.js',
             },
         },
