@@ -3,13 +3,14 @@
         [40.379535, -96.631756],
         [43.501391, -90.141582]
     ],
+    "basemap": "Streets",
     "layers": {
         "usng_10k": {
         	"dataLocation": "data/usng_10k.json",
         	"mapbookLocations": "https://ia.sharedgeo.net/maps/USNG_10K/",
         	"showLabels": true,
         	"labelPropertyName": "GRID_10K",
-            "color": "#4daf4a"
+            "color": "#333333"
         },
         "usng_1k": {
         	"dataLocation": "data/usng_1k.json",
@@ -21,8 +22,7 @@
         "state": {
         	"showLabels": false,
         	"dataLocation": "data/state.json",
-            "color": "#333333"
-        },
-        "basemap": "Streets"
+            "color": "#000000"
+        }
     }
 }

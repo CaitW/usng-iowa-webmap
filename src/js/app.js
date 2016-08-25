@@ -81,8 +81,8 @@ window.usng_map = (function() {
         "state": new L.geoJson(null, {
             stroke: true,
             color: "#333333",
-            weight: 3,
-            opacity: 1,
+            weight: 10,
+            opacity: 0.3,
             fill: false,
             clickable: false,
             className: "state",
@@ -214,7 +214,7 @@ window.usng_map = (function() {
             $map.appendTo($appContainer);
             $results.appendTo($appContainer);
             _config = data;
-            _basemap = L.esri.basemapLayer(_config.layers.basemap);
+            _basemap = L.esri.basemapLayer(_config.basemap);
             // initialize a map with the empty layers
             _map = L.map("inner_map_container", {
                 layers: [_basemap, _layers.state, _layers.usng_10k, _layers.usng_1k]

@@ -10,7 +10,7 @@
         	"mapbookLocations": "https://ia.sharedgeo.net/maps/USNG_10K/",
         	"showLabels": true,
         	"labelPropertyName": "GRID_10K",
-            "color": "#4daf4a"
+            "color": "#333333"
         },
         "usng_1k": {
         	"dataLocation": "data/usng_1k.json",
@@ -22,7 +22,7 @@
         "state": {
         	"showLabels": false,
         	"dataLocation": "data/state.json",
-            "color": "#333333"
+            "color": "#000000"
         }
     }
 }
