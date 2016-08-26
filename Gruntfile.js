@@ -77,7 +77,18 @@ module.exports = function(grunt) {
                     'dist/config.json': ['src/config/config.json'],
                 }
             }
-        }
+        },
+        md2html: {
+            one_file: {
+                options: {
+                    layout: 'src/readme_layout.html'
+                },
+                files: [{
+                    src: ['README.md'],
+                    dest: 'README.html'
+                }]
+            }
+        },
     });
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-sass');
@@ -85,6 +96,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-autoprefixer');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-md2html');
     // Default task(s).
-    grunt.registerTask('default', ['clean', 'concat', 'sass', 'autoprefixer', 'concat_css', 'copy']);
+    grunt.registerTask('default', ['clean', 'concat', 'sass', 'autoprefixer', 'concat_css', 'copy', 'md2html']);
 };
