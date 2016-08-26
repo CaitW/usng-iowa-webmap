@@ -1,4 +1,4 @@
-# USNG Web Map
+# USNG Web Map v1.0.0
 
 ### Installation 
 ***
