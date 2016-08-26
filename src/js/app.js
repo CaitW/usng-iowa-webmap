@@ -1,6 +1,7 @@
 window.usng_map = (function() {
     /**
      *  Custom Leaflet Classes
+     *  These create additional buttons and displays within the Leaflet map
      */
     L.Control.HoverPopup = L.Control.extend({
         options: {
@@ -67,6 +68,7 @@ window.usng_map = (function() {
     });
     var _config;
     var _basemap;
+    // the layers to be added to the map. JSON Data will be added to each layer after the map is created. 
     var _layers = {
         "usng_1k": new L.geoJson(null, {
             stroke: true,
@@ -98,6 +100,9 @@ window.usng_map = (function() {
             className: "usng_10k"
         })
     };
+    /** 
+     * Classes
+     */
     // Class for determining whether the map layers are fully loaded 
     function LoadCheck(callback) {
         var self = this;
@@ -123,7 +128,10 @@ window.usng_map = (function() {
             }
         };
     };
-
+    /** 
+     * Private Functions
+     */
+    // Rudimentary check to see if an object is valid GeoJSON
     function _checkIfGeoJSON(obj) {
         if (typeof obj.type != "undefined" && (obj.type == "Point" || obj.type == "MultiPoint" || obj.type == "LineString" || obj.type == "MultiLineString" || obj.type == "Polygon" || obj.type == "MultiPolygon" || obj.type == "GeometryCollection" || obj.type == "FeatureCollection")) {
             return true;
@@ -169,8 +177,10 @@ window.usng_map = (function() {
                     layerGeoJSON = _createGeoJSONFromArcGIS(data);
                 }
                 _layers[layername].addData(layerGeoJSON);
-                if(typeof _config.layers[layername].color !== "undefined") {
-                    _layers[layername].setStyle({color: _config.layers[layername].color});
+                if (typeof _config.layers[layername].color !== "undefined") {
+                    _layers[layername].setStyle({
+                        color: _config.layers[layername].color
+                    });
                 };
                 if (typeof _config.layers[layername].showLabels !== "undefined" && _config.layers[layername].showLabels === true) {
                     _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, _config.layers[layername].labelPropertyName);
@@ -178,12 +188,12 @@ window.usng_map = (function() {
             });
         });
     };
-
+    // Zoom the map to the full map extent
     function _zoomToExtent() {
         // fit the map extent to the specified boundaries
         _map.fitBounds(_config.map_extent);
     };
-
+    // Change the classes applied to the app container based on the current window size and aspect ratio
     function _updateSizeClasses() {
         if ($appContainer.width() < 500) {
             $appContainer.addClass("small_screen");
@@ -192,22 +202,27 @@ window.usng_map = (function() {
         else {
             $appContainer.addClass("large_screen");
             $appContainer.removeClass("small_screen");
-            if($appContainer.width() / $appContainer.height() < 1) {
+            if ($appContainer.width() / $appContainer.height() < 1) {
                 $appContainer.removeClass("horizontal_aspect");
                 $appContainer.addClass("vertical_aspect");
-            } else {
+            }
+            else {
                 $appContainer.removeClass("vertical_aspect");
                 $appContainer.addClass("horizontal_aspect");
             }
         }
-
     };
-
+    /** 
+     * Public Functions
+     */
+     // Used to initialize the app
     function create(options) {
+        // the user should have specified a map ID
         if (typeof options.mapID === "undefined") {
             // the user didn't specify a map ID (usually a div) 
             throw "USNG Map: Creating the map requires an HTML ID. This ID should point to a container that will hold the map.";
         }
+        // get our data 
         $.getJSON("config.json", function(data) {
             $appContainer = $("#" + options.mapID).addClass("usng_web_map").addClass("hide_results");
             _updateSizeClasses();
@@ -247,7 +262,12 @@ window.usng_map = (function() {
             $(window).resize(_updateSizeClasses);
         });
     };
-
+    /** 
+     *
+     * Modules
+     *
+     */
+     // Results
     var results = (function() {
         function _getDOM(usng_1k, usng_10k) {
             if (usng_1k.length > 0 || usng_10k.length > 0) {
@@ -268,9 +288,7 @@ window.usng_map = (function() {
         function show(usng_1k, usng_10k) {
             var $dom = _getDOM(usng_1k, usng_10k);
             if ($dom) {
-                $results.find(".results_list")
-                    .empty()
-                    .append($dom);
+                $results.find(".results_list").empty().append($dom);
                 $appContainer.removeClass("hide_results");
                 $appContainer.addClass("show_results");
                 _map.invalidateSize();
@@ -283,7 +301,7 @@ window.usng_map = (function() {
             _map.invalidateSize();
         };
 
-        function init () {
+        function init() {
             $(document).on("click", ".close_results i", hide);
         };
         return {
@@ -292,9 +310,7 @@ window.usng_map = (function() {
             init: init
         }
     })();
-    /**
-     * Selection Method Modules
-     */
+    // Map hovering
     var _hover = (function() {
         var _hovered = {
             usng_1k: [],
@@ -348,6 +364,7 @@ window.usng_map = (function() {
             init: init
         }
     })();
+    // Map clicking
     var _click = (function() {
         var _clicked = {
             usng_1k: [],
@@ -382,6 +399,7 @@ window.usng_map = (function() {
             init: init
         }
     })();
+    // Map drag-selecting
     var _dragSelect = (function() {
         var _button = new L.Control.DragSelect({
             onClick: _toggle
@@ -453,9 +471,7 @@ window.usng_map = (function() {
             init: init
         }
     })();
-    /** 
-     * Label Module
-     */
+    // Map Labels
     var _labels = (function() {
         var _layerLabels = {};
 
