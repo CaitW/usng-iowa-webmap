@@ -77,6 +77,7 @@
             width: auto !important;
             height: auto !important;
             pointer-events: none;
+            text-shadow: -1px -1px 1px #fff,-1px 1px 1px #fff,1px 1px 1px #fff,1px -1px 1px #fff;
             &.usng_10k {
                 font-weight: bold;
                 font-size: 110%;

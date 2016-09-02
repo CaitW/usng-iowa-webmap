@@ -50,7 +50,8 @@
     display: none;
     width: auto !important;
     height: auto !important;
-    pointer-events: none; }
+    pointer-events: none;
+    text-shadow: -1px -1px 1px #fff,-1px 1px 1px #fff,1px 1px 1px #fff,1px -1px 1px #fff; }
     .usng_web_map #inner_map_container .feature-label.usng_10k {
       font-weight: bold;
       font-size: 110%; }
