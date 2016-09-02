@@ -352,7 +352,7 @@ window.usng_map = (function() {
                     });
                 };
                 if (typeof _config.layers[layername].showLabels !== "undefined" && _config.layers[layername].showLabels === true) {
-                    _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, _config.layers[layername].labelPropertyName);
+                    _labels.createLabelsFromGeoJSON(layername, layerGeoJSON, _config.layers[layername].labelPropertyName, _config.layers[layername].labelColor);
                 }
             });
         });
@@ -384,7 +384,7 @@ window.usng_map = (function() {
     /** 
      * Public Functions
      */
-     // Used to initialize the app
+    // Used to initialize the app
     function create(options) {
         // the user should have specified a map ID
         if (typeof options.mapID === "undefined") {
@@ -436,7 +436,7 @@ window.usng_map = (function() {
      * Modules
      *
      */
-     // Results
+    // Results
     var results = (function() {
         function _getDOM(usng_1k, usng_10k) {
             if (usng_1k.length > 0 || usng_10k.length > 0) {
@@ -598,18 +598,20 @@ window.usng_map = (function() {
                 var drawnFeature = e.layer.toGeoJSON();
                 var usng_1k = _layers.usng_1k.toGeoJSON();
                 var usng_10k = _layers.usng_10k.toGeoJSON();
+                var labels_10k = _config.layers["usng_10k"].labelPropertyName;
+                var labels_1k = _config.layers["usng_1k"].labelPropertyName;
                 _selected.usng_1k = [];
                 _selected.usng_10k = [];
-                $.each(usng_1k.features, function(i, feature) {
-                    var intersection = (typeof turf.intersect(feature, drawnFeature) !== "undefined") ? true : false;
-                    if (intersection) {
-                        _selected.usng_1k.push(feature.properties.GRID1MIL);
-                    }
-                });
                 $.each(usng_10k.features, function(i, feature) {
                     var intersection = (typeof turf.intersect(feature, drawnFeature) !== "undefined") ? true : false;
                     if (intersection) {
-                        _selected.usng_10k.push(feature.properties.GRID_10K);
+                        _selected.usng_10k.push(feature.properties[labels_10k]);
+                    }
+                });
+                $.each(usng_1k.features, function(i, feature) {
+                    var intersection = (typeof turf.intersect(feature, drawnFeature) !== "undefined") ? true : false;
+                    if (intersection) {
+                        _selected.usng_1k.push(feature.properties[labels_1k]);
                     }
                 });
                 if (_selected.usng_1k.length > 0 || _selected.usng_10k.length > 0) {
@@ -644,7 +646,7 @@ window.usng_map = (function() {
     var _labels = (function() {
         var _layerLabels = {};
 
-        function createLabelsFromGeoJSON(layername, geoJSON, propertyToDisplay) {
+        function createLabelsFromGeoJSON(layername, geoJSON, propertyToDisplay, labelColor) {
             var labelCollection = [];
             $.each(geoJSON.features, function(i, feature) {
                 var centroid = turf.centroid(feature);
@@ -659,6 +661,9 @@ window.usng_map = (function() {
                 // center icon HTML and attach properties to data object
                 var iconMargin = ($(label._icon).width() / 2) * -1;
                 $(label._icon).data(feature.properties).css("margin-left", iconMargin);
+                if(typeof labelColor !== "undefined") {
+                    $(label._icon).css("color", labelColor);
+                }
                 // add label to list
                 labelCollection.push(label);
             });

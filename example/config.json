@@ -10,14 +10,16 @@
         	"mapbookLocations": "https://ia.sharedgeo.net/maps/USNG_10K/",
         	"showLabels": true,
         	"labelPropertyName": "GRID_10K",
-            "color": "#333333"
+            "color": "#333333",
+            "labelColor": "#333333"
         },
         "usng_1k": {
-        	"dataLocation": "data/usng_1k.json",
+        	"dataLocation": "data/iowa_mapbook_boundaries.json",
         	"mapbookLocations": "https://ia.sharedgeo.net/maps/USNG_mapbooks/",
         	"showLabels": true,
-        	"labelPropertyName": "GRID1MIL",
-            "color": "#377eb8"
+        	"labelPropertyName": "Name",
+            "color": "#377eb8",
+            "labelColor": "#377eb8"
         },
         "state": {
         	"showLabels": false,
