@@ -442,10 +442,10 @@ window.usng_map = (function() {
             if (usng_1k.length > 0 || usng_10k.length > 0) {
                 var $text = $("<ul></ul>");
                 $.each(usng_1k, function(i, text) {
-                    $("<li><a href='" + _config.layers["usng_1k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>").appendTo($text);
+                    $("<li><a href='" + _config.layers["usng_1k"].mapbookLocations + text + ".pdf' target='_blank'>" + text + "</a></li>").appendTo($text);
                 });
                 $.each(usng_10k, function(i, text) {
-                    $("<li><a href='" + _config.layers["usng_10k"].mapbookLocations + text + ".pdf'>" + text + "</a></li>").appendTo($text);
+                    $("<li><a href='" + _config.layers["usng_10k"].mapbookLocations + text + ".pdf' target='_blank'>" + text + "</a></li>").appendTo($text);
                 });
                 return $text;
             }
