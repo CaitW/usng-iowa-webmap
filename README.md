@@ -1,6 +1,12 @@
 # USNG Web Map v1.0.1
 A library for creating a specific Leaflet-based map for the state of Iowa. The map application allows users to select via interactive map the state's repository of print maps. 
 
+### View Example
+***
+* Clone repository 
+* Copy `/example` to your favorite server
+* Open `index.html`
+
 ### Installation 
 ***
 * Copy `dist` folder contents into root of website
